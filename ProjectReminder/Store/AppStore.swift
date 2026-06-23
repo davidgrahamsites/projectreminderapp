@@ -30,8 +30,14 @@ final class AppStore: ReminderStoring {
     // MARK: Init
 
     init(document: ReminderDocument = .init(), settings: ReminderSettings = .init()) {
-        self.document = document
-        self.settings = settings
+        // Load previously persisted projects so they survive relaunches offline.
+        if let saved = LocalPersistence.load() {
+            self.document = saved.document
+            self.settings = saved.settings
+        } else {
+            self.document = document
+            self.settings = settings
+        }
     }
 
     deinit {
@@ -82,11 +88,13 @@ final class AppStore: ReminderStoring {
 
     func advanceRotation() {
         document = RotationEngine.advance(document)
+        persist()
         publish()
     }
 
     func setInterval(_ interval: ReminderInterval) {
         settings.interval = interval
+        persist()
         publish()
     }
 
@@ -96,6 +104,7 @@ final class AppStore: ReminderStoring {
         if envelope.document.version >= document.version {
             settings = envelope.settings
         }
+        persist()
     }
 
     // MARK: Private
@@ -103,7 +112,13 @@ final class AppStore: ReminderStoring {
     private func touch() {
         document.version += 1
         document.lastModified = Date()
+        persist()
         publish()
+    }
+
+    /// Save the current state to disk so it survives relaunches offline.
+    private func persist() {
+        LocalPersistence.save(document: document, settings: settings)
     }
 
     /// Publishes current state to every registered transport (fire-and-forget).

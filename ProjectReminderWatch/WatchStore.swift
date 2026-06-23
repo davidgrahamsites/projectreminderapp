@@ -1,10 +1,8 @@
 import Foundation
 import ReminderKit
 
-/// @Observable store used by the watch UI until Agent A delivers SwiftDataReminderStore.
-/// Mirrors InMemoryReminderStore logic with @Observable so SwiftUI views re-render on change.
-/// Switch: replace `WatchStore()` with `SwiftDataReminderStore(...)` at the init site in
-/// ProjectReminderWatchApp once A's HANDOFF announces it's ready.
+/// @Observable store for the watch UI. Persists locally (offline) via `LocalPersistence` so the
+/// projects survive relaunches, and stays in sync with the iPhone/Mac via WatchConnectivity.
 @Observable
 @MainActor
 final class WatchStore: ReminderStoring {
@@ -12,13 +10,19 @@ final class WatchStore: ReminderStoring {
     private(set) var settings: ReminderSettings
 
     init(document: ReminderDocument = .init(), settings: ReminderSettings = .init()) {
-        self.document = document
-        self.settings = settings
+        if let saved = LocalPersistence.load() {
+            self.document = saved.document
+            self.settings = saved.settings
+        } else {
+            self.document = document
+            self.settings = settings
+        }
     }
 
     private func touch() {
         document.version += 1
         document.lastModified = Date()
+        persist()
     }
 
     func add(_ project: Project) { document.projects.append(project); touch() }
@@ -44,12 +48,17 @@ final class WatchStore: ReminderStoring {
         touch()
     }
 
-    func advanceRotation() { document = RotationEngine.advance(document) }
+    func advanceRotation() { document = RotationEngine.advance(document); persist() }
 
-    func setInterval(_ interval: ReminderInterval) { settings.interval = interval }
+    func setInterval(_ interval: ReminderInterval) { settings.interval = interval; persist() }
 
     func apply(_ envelope: SyncEnvelope) {
         document = ReminderDocument.merged(document, envelope.document)
         if envelope.document.version >= document.version { settings = envelope.settings }
+        persist()
+    }
+
+    private func persist() {
+        LocalPersistence.save(document: document, settings: settings)
     }
 }
