@@ -27,6 +27,9 @@ public final class LANTransport: SyncTransport, @unchecked Sendable {
     private var connections: [ObjectIdentifier: NWConnection] = [:]
     /// Endpoints we initiated (outbound). Used to avoid duplicate connections.
     private var outboundEndpoints: Set<NWEndpoint> = []
+    /// The most recently published frame, replayed to each peer the moment it connects so a
+    /// freshly-launched device immediately receives the current projects (not just future edits).
+    private var lastFrame: Data?
 
     private let _continuation: AsyncStream<SyncEnvelope>.Continuation
     public let incoming: AsyncStream<SyncEnvelope>
@@ -52,8 +55,15 @@ public final class LANTransport: SyncTransport, @unchecked Sendable {
         guard let data = try? envelope.encoded() else { return }
         let frame = Self.frame(data)
         queue.async { [weak self] in
-            self?.connections.values.forEach { $0.send(content: frame, completion: .idempotent) }
+            guard let self else { return }
+            self.lastFrame = frame
+            self.connections.values.forEach { $0.send(content: frame, completion: .idempotent) }
         }
+    }
+
+    /// Send the cached current state to a single newly-ready connection.
+    private func sendCurrentState(to conn: NWConnection) {
+        if let frame = lastFrame { conn.send(content: frame, completion: .idempotent) }
     }
 
     // MARK: — Listener (server side)
@@ -73,6 +83,7 @@ public final class LANTransport: SyncTransport, @unchecked Sendable {
         conn.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
+                self?.sendCurrentState(to: conn)   // replay current projects to the new peer
                 self?.receive(from: conn, key: key)
             case .cancelled, .failed:
                 self?.connections.removeValue(forKey: key)
@@ -121,6 +132,7 @@ public final class LANTransport: SyncTransport, @unchecked Sendable {
         conn.stateUpdateHandler = { [weak self] state in
             switch state {
             case .ready:
+                self?.sendCurrentState(to: conn)   // replay current projects to the new peer
                 self?.receive(from: conn, key: key)
             case .cancelled, .failed:
                 self?.connections.removeValue(forKey: key)

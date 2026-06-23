@@ -30,10 +30,11 @@ The wiki is the durable cross-session memory (architecture + hidden assumptions)
   WatchConnectivity. Designed so a `CloudKitTransport` can be added later behind `SyncTransport`
   (iCloud needs a paid account — deferred). Conflict resolution: last-writer-wins on
   `ReminderDocument.version`.
-- **Persistence:** per-device SwiftData store in the App Group `group.com.danielwang.projectreminder`.
+- **Persistence:** per-device local SwiftData store. (NO App Group / iCloud — a free Apple personal
+  team can't use those capabilities; including them breaks Xcode signing. Cross-device consistency is
+  handled entirely by LAN + WatchConnectivity sync.)
 - **Watch haptics:** repeating local notifications (`UNUserNotificationCenter`) — watchOS can't run
-  free arbitrary background timers. Signing is a **free personal team** (7-day expiry; CloudKit
-  unavailable).
+  free arbitrary background timers. Signing is a **free personal team** (7-day expiry; App Groups, CloudKit, and complications avoided).
 
 ## Build & Test Commands
 ```bash

@@ -30,6 +30,9 @@ final class MacBridge {
                 }
             }
         }
+        // Seed the transport with the current (persisted) projects so any device that connects
+        // later immediately receives them — the Mac is the authoring source of truth.
+        transport.publish(SyncEnvelope(document: store.document, settings: store.settings, deviceID: deviceID))
     }
 
     deinit { inbound?.cancel() }

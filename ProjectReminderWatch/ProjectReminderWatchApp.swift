@@ -1,5 +1,4 @@
 import SwiftUI
-import WidgetKit
 import ReminderKit
 
 @main
@@ -23,11 +22,7 @@ struct ProjectReminderWatchApp: App {
                     // Bind WCSession to receive envelopes from the iPhone.
                     receiver.bind(to: store)
                     receiver.activate()
-                    publishHead()
                 }
-                // Keep the complication's head snapshot in sync with any change
-                // (rotation advance, inbound sync, edits).
-                .onChange(of: store.document) { _, _ in publishHead() }
         }
         // ROTATION LIFECYCLE HOOK — scenePhase → .background
         //
@@ -49,14 +44,6 @@ struct ProjectReminderWatchApp: App {
             // Reschedule so the trigger uses the current interval (in case it
             // was changed in Settings during this session).
             scheduler.schedule(interval: store.settings.interval)
-            publishHead()
         }
-    }
-
-    /// Mirror the current rotation head into the App-Group snapshot and refresh the
-    /// watch-face complication.
-    private func publishHead() {
-        SharedHeadState.write(store.document.head?.title)
-        WidgetCenter.shared.reloadAllTimelines()
     }
 }

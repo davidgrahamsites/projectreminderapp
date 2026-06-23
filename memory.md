@@ -2,6 +2,19 @@
 
 Newest first. Each entry: decision + rationale.
 
+## 2026-06-23 — Free-team fixes: removed App Groups, removed complication, fixed LAN sync
+User reported Xcode builds failing, no Mac↔iPhone sync, watch app not installing, and burned App-ID
+quota. Root causes + fixes:
+- **App Groups break free-team signing** → removed the `group.com…` entitlement from all targets;
+  each app keeps its own local SwiftData/in-memory store (sync handles consistency). CloudKit/App
+  Groups stay out until a paid account.
+- **Too many bundle ids** (iOS, watch, complication, mac = 4 App IDs; free limit is 10/7-days) →
+  removed the WidgetKit **complication** target. Down to 3 ids; watch id stays `<iOS id>.watchkitapp`
+  with `WKCompanionAppBundleIdentifier` = iOS id (required for install/pairing).
+- **No Mac↔iPhone sync** → the iOS app had `LANTransport` commented out; wired it on. Also the LAN
+  transport never sent existing state to a newly-connected peer → added a `lastFrame` cache replayed
+  on each connection `.ready`, and the Mac now publishes its loaded projects at startup.
+
 ## 2026-06-23 — Shared DesignKit for one consistent look (4th "agent" / design phase)
 Added `Packages/DesignKit` (neumorphic-purple SwiftUI tokens + ProjectCard/ProjectRow signature),
 linked into all three targets, and restyled Mac/iOS/watch to match. Overall look only (per user),

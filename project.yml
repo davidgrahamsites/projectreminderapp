@@ -21,6 +21,11 @@ settings:
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.9"
 
+# NOTE: No App Groups / CloudKit anywhere — a FREE Apple personal team cannot use those
+# capabilities, and including them makes Xcode signing fail. Each app keeps its own local
+# SwiftData store; cross-device sync is handled entirely by LAN + WatchConnectivity.
+# Three bundle ids only (iOS, iOS.watchkitapp, mac) to stay light on the 10-App-IDs/7-days limit.
+
 targets:
   # macOS — the authoring surface (where projects are set)
   ProjectReminderMac:
@@ -47,8 +52,6 @@ targets:
         com.apple.security.app-sandbox: true
         com.apple.security.network.server: true
         com.apple.security.network.client: true
-        com.apple.security.application-groups:
-          - group.com.danielwang.projectreminder
 
   # iOS — the bridge + on-the-go editor
   ProjectReminder:
@@ -74,13 +77,9 @@ targets:
         NSLocalNetworkUsageDescription: "Project Reminder syncs your projects with your Mac over the local network."
         NSBonjourServices:
           - _projreminder._tcp
-    entitlements:
-      path: ProjectReminder/iOS.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.danielwang.projectreminder
 
-  # watchOS — the main surface
+  # watchOS — the main surface. Bundle id MUST be <iOS id>.watchkitapp and the companion id
+  # MUST equal the iOS app's id, or the watch app won't install/pair.
   ProjectReminderWatch:
     type: application
     platform: watchOS
@@ -89,8 +88,6 @@ targets:
     dependencies:
       - package: ReminderKit
       - package: DesignKit
-      - target: ProjectReminderComplication
-        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.danielwang.projectreminder.watchkitapp
@@ -102,34 +99,6 @@ targets:
         CFBundleDisplayName: Reminders
         WKApplication: true
         WKCompanionAppBundleIdentifier: com.danielwang.projectreminder
-    entitlements:
-      path: ProjectReminderWatch/Watch.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.danielwang.projectreminder
-
-  # watchOS complication (WidgetKit) — shows the current head project on the watch face
-  ProjectReminderComplication:
-    type: app-extension
-    platform: watchOS
-    sources:
-      - path: ProjectReminderComplication
-    dependencies:
-      - package: ReminderKit
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.danielwang.projectreminder.watchkitapp.complication
-    info:
-      path: ProjectReminderComplication/Info.plist
-      properties:
-        CFBundleDisplayName: Reminder
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    entitlements:
-      path: ProjectReminderComplication/Complication.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.danielwang.projectreminder
 
 schemes:
   ProjectReminderMac:

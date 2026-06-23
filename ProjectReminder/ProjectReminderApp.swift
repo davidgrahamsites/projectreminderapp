@@ -11,8 +11,9 @@ struct ProjectReminderApp: App {
     // WatchConnectivityTransport must live as long as the app (WCSession holds a weak delegate).
     @State private var wcTransport = WatchConnectivityTransport()
 
-    // LANTransport (Agent A, ReminderKit): wire in here when Agent A's HANDOFF confirms it's ready.
-    // @State private var lanTransport = LANTransport()
+    // LANTransport bridges to the Mac over the local network (Bonjour). The iPhone is the bridge:
+    // it relays the Mac's projects to the Watch and vice-versa.
+    @State private var lanTransport = LANTransport()
 
     var body: some Scene {
         WindowGroup {
@@ -29,8 +30,7 @@ struct ProjectReminderApp: App {
     /// Wire transports to the store. Called once on first task activation.
     private func setupTransports() {
         store.addTransport(wcTransport)
-        // Uncomment when Agent A delivers LANTransport:
-        // store.addTransport(lanTransport)
+        store.addTransport(lanTransport)
     }
 
     /// Request notification permission. The Watch fires the actual haptics, but iOS
