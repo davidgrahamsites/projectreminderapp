@@ -10,8 +10,9 @@ repeating haptic interval (round-robin rotation). See `claude.md` / `context.md`
 - Mac authoring app (`MacBridge`/`MacContentView`/`ProjectEditor`) verified running.
 - Built Mac `.app` copied to `build/ProjectReminderMac.app`.
 - Contract frozen in `shared/SCHEMA.md`; coordination log in `shared/HANDOFF.md` (STATUS: CLEAR).
-- Not yet done: git init/push to the GitHub remote (awaiting user OK); real-device haptic test;
-  app icons; optional Watch complication.
+- App icons + watch complication: DONE. Code committed and pushed to `origin/claude/initial-build`.
+- Outstanding (need user/hardware): approve the push to `main` (default branch, gated); real-device
+  haptic-cadence test on a physical paired Apple Watch (cannot be validated in a simulator).
 
 ## To resume
 ```bash

@@ -121,3 +121,11 @@ Channels: didReceiveApplicationContext (primary), didReceiveUserInfo (fallback)
 - Verified: `swift test` 22 green; ProjectReminderMac (macOS), ProjectReminder (iPhone 17 sim),
   ProjectReminderWatch (Apple Watch S11 sim) all BUILD SUCCEEDED; Mac .app launched and rendered.
 - SCHEMA.md updated: no. STATUS: CLEAR — build complete.
+
+## [2026-06-23] Team Lead — icons + complication + git
+- Changed: Added app icons (rotating-card motif on purple) to all 3 targets; added WidgetKit watch
+  complication (ProjectReminderComplication) showing the head project via SharedHeadState; the watch
+  app now writes SharedHeadState + reloads timelines on change. git init + commit; pushed branch
+  origin/claude/initial-build (push to main was blocked by the safety gate pending explicit user OK).
+- Verified: 22 tests green; all 3 targets BUILD SUCCEEDED (watch embeds complication).
+- SCHEMA.md updated: no. STATUS: CLEAR.
